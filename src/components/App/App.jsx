@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { nanoid } from 'nanoid';
 import { ContactForm } from '../ContactForm/ContactForm';
 import { ContactList } from '../ContactList/ContactList';
@@ -7,82 +7,75 @@ import { Section } from 'components/Section/Section';
 import { Notification } from 'components/Notification/Notification';
 import { Container } from './App.styled';
 
-export class App extends Component {
-  state = {
-    contacts: [
-      { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-      { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-      { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-      { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+const initContacts = [
+  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+];
 
-  componentDidMount() {
+export const App = () => {
+  const [contacts, setContacts] = useState(() => {
     const savedContacts = localStorage.getItem('contacts');
     if (savedContacts !== null) {
       const parsedContacts = JSON.parse(savedContacts);
-      this.setState({ contacts: parsedContacts });
+      return parsedContacts;
     }
-  }
+    return initContacts;
+  });
+  const [filter, setFilter] = useState('');
 
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.contacts !== this.state.contacts) {
-      localStorage.setItem('contacts', JSON.stringify(this.state.contacts));
-    }
-  }
+  useEffect(() => {
+    localStorage.setItem('contacts', JSON.stringify(contacts));
+  }, [contacts]);
 
-  addContact = (name, number) => {
+  const addContact = (name, number) => {
     if (
-      this.state.contacts.find(
+      contacts.find(
         contact => contact.name.toLowerCase() === name.toLowerCase()
       )
     ) {
       alert(`${name} is already in contacts`);
       return;
     }
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, { id: nanoid(), name, number }],
-    }));
+    setContacts(prevContacts => [
+      ...prevContacts,
+      { id: nanoid(), name, number },
+    ]);
   };
 
-  searchContact = e => this.setState({ filter: e.target.value });
+  const searchContact = e => setFilter(e.target.value);
 
-  filterContacts = items =>
+  const filterContacts = items =>
     items.filter(item =>
-      item.name.toLowerCase().includes(this.state.filter.toLowerCase())
+      item.name.toLowerCase().includes(filter.toLowerCase())
     );
 
-  deleteContact = contactId => {
-    this.setState(prevState => ({
-      contacts: prevState.contacts.filter(contact => contact.id !== contactId),
-    }));
+  const deleteContact = contactId => {
+    setContacts(prevContacts =>
+      prevContacts.filter(contact => contact.id !== contactId)
+    );
   };
 
-  render() {
-    const { contacts, filter } = this.state;
-    const { addContact, searchContact, filterContacts, deleteContact } = this;
+  return (
+    <Container>
+      <Section title="Phonebook">
+        <ContactForm onSubmit={addContact} contacts={contacts} />
+      </Section>
 
-    return (
-      <Container>
-        <Section title="Phonebook">
-          <ContactForm onSubmit={addContact} contacts={contacts} />
-        </Section>
-
-        <Section title="Contacts">
-          {contacts.length > 0 ? (
-            <>
-              <Filter onChange={searchContact} value={filter} />
-              <ContactList
-                items={filterContacts(contacts)}
-                onDelete={deleteContact}
-              />
-            </>
-          ) : (
-            <Notification message="Ooops, there is no contact in your phonebook" />
-          )}
-        </Section>
-      </Container>
-    );
-  }
-}
+      <Section title="Contacts">
+        {contacts.length > 0 ? (
+          <>
+            <Filter onChange={searchContact} value={filter} />
+            <ContactList
+              items={filterContacts(contacts)}
+              onDelete={deleteContact}
+            />
+          </>
+        ) : (
+          <Notification message="Ooops, there is no contact in your phonebook" />
+        )}
+      </Section>
+    </Container>
+  );
+};
