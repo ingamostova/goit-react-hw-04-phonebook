@@ -16,12 +16,9 @@ const initContacts = [
 
 export const App = () => {
   const [contacts, setContacts] = useState(() => {
-    const savedContacts = localStorage.getItem('contacts');
-    if (savedContacts !== null) {
-      const parsedContacts = JSON.parse(savedContacts);
-      return parsedContacts;
-    }
-    return initContacts;
+    return JSON.parse(localStorage.getItem('contacts')) !== null
+      ? JSON.parse(localStorage.getItem('contacts'))
+      : initContacts;
   });
   const [filter, setFilter] = useState('');
 
@@ -60,7 +57,7 @@ export const App = () => {
   return (
     <Container>
       <Section title="Phonebook">
-        <ContactForm onSubmit={addContact} contacts={contacts} />
+        <ContactForm onSubmit={addContact} />
       </Section>
 
       <Section title="Contacts">
